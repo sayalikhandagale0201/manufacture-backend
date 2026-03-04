@@ -23,7 +23,7 @@ public class EnquiryController {
         return enquiryRepository.save(enquiry);
     }
 
-    // Admin: get all enquiries
+    // Admin: get all enquiri)
     @GetMapping("/admin")
     public List<Enquiry> getAllEnquiries() {
         return enquiryRepository.findAll();

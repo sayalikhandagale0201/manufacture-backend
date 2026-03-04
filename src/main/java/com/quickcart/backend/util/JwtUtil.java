@@ -1,37 +1,56 @@
 package com.quickcart.backend.util;
 
-import org.springframework.stereotype.Component;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.io.Decoders;
+import org.springframework.stereotype.Component;
+
+import java.security.Key;
 import java.util.Date;
 
-@Component // <-- ये सबसे जरूरी है
+@Component
 public class JwtUtil {
 
-    private final String SECRET_KEY = "yourSecretKey123"; // अपनी secret डालो
+    // 32+ characters secret required for HS256
+    private static final String SECRET_KEY = "quickcartSecretKeyQuickcartSecretKey";
 
-    // Token generate करने के लिए
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    }
+
+    // ✅ Token Generate
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 घंटे
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
+                .signWith(getSigningKey())
                 .compact();
     }
 
-    // Token validate करने के लिए
-    public boolean validateToken(String token, String username) {
-        String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
-    }
-
+    // ✅ Extract Username
     public String extractUsername(String token) {
-        return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody().getSubject();
+        return extractAllClaims(token).getSubject();
     }
 
+    // ✅ Validate Token
+    public boolean validateToken(String token, String username) {
+        final String extractedUsername = extractUsername(token);
+        return extractedUsername.equals(username) && !isTokenExpired(token);
+    }
+
+    // ✅ Check Expiry
     private boolean isTokenExpired(String token) {
-        return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody().getExpiration()
-                .before(new Date());
+        return extractAllClaims(token).getExpiration().before(new Date());
+    }
+
+    // ✅ Extract Claims
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

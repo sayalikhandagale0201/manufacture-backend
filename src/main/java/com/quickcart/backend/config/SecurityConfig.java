@@ -15,35 +15,31 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-    // PasswordEncoder bean – solves the AuthService error
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Security filter chain
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/auth/**", // Auth endpoints
-                                "/api/**", // API endpoints
-                                "/uploads/**" // Static uploads
-                        ).permitAll()
-                        .anyRequest().authenticated() // everything else needs auth
-                );
+                                "/auth/**",
+                                "/api/**",
+                                "/uploads/**")
+                        .permitAll()
+                        .anyRequest().permitAll());
 
         return http.build();
     }
 
-    // CORS configuration
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000")); // frontend URL
+        config.setAllowedOrigins(List.of("http://localhost:3000"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
